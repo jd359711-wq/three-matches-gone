@@ -338,18 +338,94 @@
     mix-blend-mode:multiply;
   }
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+
+  /* ---------- THOUGHT CABINET ---------- */
+  #cabinet-btn{
+    background:none; border:1px solid var(--amber-dim); color:var(--amber);
+    width:26px; height:26px; border-radius:50%; font-size:12px;
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  #cabinet-badge{
+    position:absolute; top:-4px; right:-4px;
+    width:9px; height:9px; border-radius:50%;
+    background:var(--evidence); display:none;
+  }
+  #cabinet-badge.on{display:block;}
+  #cabinet-modal{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(4,4,3,0.88);
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  #cabinet-modal.show{display:flex;}
+  #cabinet-inner{
+    width:100%; max-width:640px; max-height:80vh; overflow-y:auto;
+    background:var(--panel); border-top:1px solid var(--amber-dim);
+    padding:16px 18px calc(env(safe-area-inset-bottom) + 20px);
+  }
+  .cab-head{
+    font-family:'Courier New', monospace; letter-spacing:0.14em; font-size:12px;
+    color:var(--amber); text-transform:uppercase;
+    display:flex; justify-content:space-between; margin-bottom:14px;
+  }
+  #cabinet-close{cursor:pointer; color:var(--dim);}
+  .cab-section{margin-bottom:16px;}
+  .cab-label{
+    font-family:'Courier New', monospace; font-size:10px; letter-spacing:0.1em;
+    color:var(--dim); text-transform:uppercase; margin-bottom:6px;
+  }
+  .cab-item{
+    background:var(--panel2); border-left:3px solid var(--amber-dim);
+    padding:9px 11px; border-radius:2px; margin-bottom:6px; font-size:13px;
+  }
+  .cab-item .voice-tag{
+    font-family:'Courier New', monospace; font-size:9px; letter-spacing:0.08em;
+    display:block; margin-bottom:3px;
+  }
+  .cab-item.clickable{cursor:pointer;}
+  .cab-item .prog{font-size:10px; color:var(--dim); font-family:'Courier New', monospace; margin-top:4px;}
+  .cab-empty{font-size:12px; color:var(--dim); font-style:italic;}
+
+  /* voice tag colors */
+  .v-logic{color:#5fa8d9;} .v-empire{color:#9b6bd4;} .v-volition{color:#5fbf8a;}
+  .v-physical{color:#c9573f;} .v-empathy{color:#d97fa0;} .v-suggestion{color:#e0995a;}
+
+  #scene-text .thought.v-logic{border-left-color:#2c5470;}
+  #scene-text .thought.v-empire{border-left-color:#4a3568;}
+  #scene-text .thought.v-volition{border-left-color:#2c5c42;}
+  #scene-text .thought.v-physical{border-left-color:#5a2a20;}
+  #scene-text .thought.v-empathy{border-left-color:#6a3a4c;}
+
+  #thought-toast{
+    position:fixed; left:50%; bottom:14px; transform:translateX(-50%) translateY(20px);
+    z-index:150; background:rgba(10,9,7,0.95); border:1px solid var(--amber-dim);
+    padding:8px 14px; border-radius:3px; font-family:'Courier New', monospace;
+    font-size:10px; letter-spacing:0.08em; color:var(--amber); text-transform:uppercase;
+    opacity:0; transition:opacity .3s ease, transform .3s ease; pointer-events:none;
+    max-width:88%; text-align:center;
+  }
+  #thought-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="backdrop" class="grain"></div>
   <header>
+    <button id="cabinet-btn" aria-label="Thought Cabinet">◆<span id="cabinet-badge"></span></button>
     <div class="title">Three Matches Gone</div>
     <div class="gauges">
       <div class="gauge clarity">CLA<div class="bar"><div class="fill" id="fill-clarity"></div></div></div>
       <div class="gauge nerve">NRV<div class="bar"><div class="fill" id="fill-nerve"></div></div></div>
     </div>
   </header>
+  <div id="cabinet-modal">
+    <div id="cabinet-inner">
+      <div class="cab-head">THOUGHT CABINET <span id="cabinet-close">✕</span></div>
+      <div class="cab-section"><div class="cab-label">Internalising</div><div id="cab-slots"></div></div>
+      <div class="cab-section"><div class="cab-label">Unslotted</div><div id="cab-discovered"></div></div>
+      <div class="cab-section"><div class="cab-label">Internalised</div><div id="cab-done"></div></div>
+    </div>
+  </div>
+  <div id="thought-toast"></div>
   <div id="stage">
     <div id="check-banner">
       <div class="label" id="check-label"></div>
@@ -1267,7 +1343,8 @@ function beep(freq, dur, type){
 
 function showCheck(stat, pass, cb){
   const banner = document.getElementById('check-banner');
-  document.getElementById('check-label').textContent = (stat==='clarity'?'WHITE':'RED')+' CHECK — '+stat.toUpperCase();
+  const isWhite = stat==='clarity';
+  document.getElementById('check-label').textContent = (isWhite?'WHITE':'RED')+' CHECK — '+stat.toUpperCase()+(isWhite?'':' (no take-backs)');
   const diceEl = document.getElementById('check-dice');
   const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
   const cls = stat==='clarity' ? 'white' : 'red';
@@ -1292,10 +1369,14 @@ function revealText(container, html, thoughtHtml, onDone){
   tmp.innerHTML = html;
   const paras = Array.from(tmp.children);
   let pi = 0;
+  let skip = false;
+  const skipHandler = ()=>{ skip = true; };
+  container.addEventListener('click', skipHandler);
 
   function typePara(){
     if(pi >= paras.length){
       container.classList.remove('typing');
+      container.removeEventListener('click', skipHandler);
       if(thoughtHtml){
         const t = document.createElement('div');
         t.innerHTML = thoughtHtml;
@@ -1307,12 +1388,13 @@ function revealText(container, html, thoughtHtml, onDone){
     }
     const p = document.createElement('p');
     container.appendChild(p);
-    const full = paras[pi].innerHTML;
     const plain = paras[pi].textContent;
     let ci = 0;
-    const speed = Math.max(6, Math.min(18, 900/plain.length));
+    skip = false;
+    const speed = Math.max(14, Math.min(34, 1400/plain.length));
     const timer = setInterval(()=>{
-      ci += 2;
+      if(skip){ ci = plain.length; }
+      else { ci += 1; }
       p.textContent = plain.slice(0, ci);
       if(ci >= plain.length){
         clearInterval(timer);
@@ -1352,7 +1434,9 @@ function render(){
   const txt = pickText(node);
   main.innerHTML = `<div id="scene-text" class="fade"></div>`;
   const sceneTextEl = document.getElementById('scene-text');
-  const thoughtHtml = node.thought ? `<span class="thought">${escapeHtml(node.thought)}</span>` : '';
+  const thoughtVoice = node.thought ? classifyVoice(node.thought) : null;
+  const thoughtHtml = node.thought ? `<span class="thought ${thoughtVoice.cls}"><span class="voice-tag ${thoughtVoice.cls}">${thoughtVoice.name}</span>${escapeHtml(node.thought)}</span>` : '';
+  if(node.thought) maybeDiscoverThought(node.thought);
   choicesEl.classList.add('hidden');
   choicesEl.innerHTML="";
   revealText(sceneTextEl, paragraphs(txt), thoughtHtml, ()=>{ choicesEl.classList.remove('hidden'); });
@@ -1363,7 +1447,7 @@ function render(){
     const b = document.createElement('button');
     b.className='choice';
     const tag = checkTag(label);
-    b.innerHTML = escapeHtml(label) + (tag ? `<span class="tag">${tag.stat.toUpperCase()} CHECK</span>` : '');
+    b.innerHTML = escapeHtml(label) + (tag ? `<span class="tag">${tag.stat==='clarity'?'WHITE':'RED'} — ${tag.stat.toUpperCase()}</span>` : '');
     b.onclick = ()=>{
       beep(320,0.06,'square');
       const advance = ()=>{
@@ -1373,6 +1457,7 @@ function render(){
         if(/wait|stay quiet|let it drop|leave|calm/i.test(label)) state.nerve = clamp(state.nerve+1);
         if(/pills|take one|drink/i.test(label)) state.clarity = clamp(state.clarity-1);
         if(/remember|read|search|evidence/i.test(label)) state.clarity = clamp(state.clarity+1);
+        tickThoughts();
 
         if(FOLD_NODES.has(target)){
           runMinigame(()=>{ render(); window.scrollTo(0,0); });
@@ -1401,6 +1486,106 @@ function render(){
 function flagLabel(f){
   return {matchbook:"Matchbook",pills:"Pill bottle",tin:"Tin",receipt:"Receipt",gascan:"Gas can",photo:"Photograph",card:"White card"}[f]||f;
 }
+
+/* ---------- INNER VOICES (skill archetypes) ---------- */
+const VOICES = [
+  {id:'logic', name:'LOGIC', cls:'v-logic', re:/logic|evidence|fact|deduce|proof|timeline|line up|add up|clean/i, stat:'clarity'},
+  {id:'empire', name:'INLAND EMPIRE', cls:'v-empire', re:/remember|memory|dream|vision|real or not|impossible|ghost/i, stat:'clarity'},
+  {id:'volition', name:'VOLITION', cls:'v-volition', re:/should|discipline|resolve|stand|refuse|decide|not going to|last chance/i, stat:'nerve'},
+  {id:'physical', name:'PHYSICAL INSTRUMENT', cls:'v-physical', re:/hurt|pain|body|run|fight|survive|blood|throb/i, stat:'nerve'},
+  {id:'empathy', name:'EMPATHY', cls:'v-empathy', re:/she|her|sorry|care|protect|gift|kindness/i, stat:'clarity'},
+];
+function classifyVoice(text){
+  for(const v of VOICES){ if(v.re.test(text)) return v; }
+  return {id:'suggestion', name:'SUGGESTION', cls:'v-suggestion', stat:'clarity'};
+}
+
+/* ---------- THOUGHT CABINET ---------- */
+function initThoughts(){
+  if(!state.thoughts) state.thoughts = { seen:{}, slots:[], done:[] };
+}
+const CABINET_SLOTS = 3;
+const RESEARCH_TICKS = 4;
+
+function maybeDiscoverThought(text){
+  initThoughts();
+  if(state.thoughts.seen[text]) return;
+  const voice = classifyVoice(text);
+  state.thoughts.seen[text] = {text, voiceId:voice.id, voiceName:voice.name, voiceCls:voice.cls, stat:voice.stat, slotted:false, done:false};
+  showThoughtToast('NEW THOUGHT: '+voice.name);
+  document.getElementById('cabinet-badge').classList.add('on');
+}
+function showThoughtToast(msg){
+  const t = document.getElementById('thought-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2200);
+}
+function tickThoughts(){
+  initThoughts();
+  let changed = false;
+  state.thoughts.slots.forEach(s=>{
+    if(!s.done){
+      s.ticks++;
+      if(s.ticks >= RESEARCH_TICKS){
+        s.done = true;
+        const entry = state.thoughts.seen[s.text];
+        if(entry){ entry.done = true; entry.slotted = false; }
+        if(s.stat === 'clarity') state.clarity = clamp(state.clarity+1);
+        else state.nerve = clamp(state.nerve+1);
+        showThoughtToast('INTERNALISED: '+s.voiceName);
+        changed = true;
+      }
+    }
+  });
+  if(changed){
+    state.thoughts.done.push(...state.thoughts.slots.filter(s=>s.done).map(s=>({text:s.text, voiceName:s.voiceName, voiceCls:s.voiceCls})));
+    state.thoughts.slots = state.thoughts.slots.filter(s=>!s.done);
+  }
+}
+function slotThought(text){
+  initThoughts();
+  if(state.thoughts.slots.length >= CABINET_SLOTS) return;
+  const entry = state.thoughts.seen[text];
+  if(!entry || entry.slotted || entry.done) return;
+  entry.slotted = true;
+  state.thoughts.slots.push({text, voiceName:entry.voiceName, voiceCls:entry.voiceCls, stat:entry.stat, ticks:0});
+  renderCabinet();
+  saveState();
+}
+function renderCabinet(){
+  initThoughts();
+  const slotsEl = document.getElementById('cab-slots');
+  const discEl = document.getElementById('cab-discovered');
+  const doneEl = document.getElementById('cab-done');
+
+  slotsEl.innerHTML = state.thoughts.slots.length ? state.thoughts.slots.map(s=>`
+    <div class="cab-item"><span class="voice-tag ${s.voiceCls}">${s.voiceName}</span>${escapeHtml(s.text)}
+    <div class="prog">researching — ${s.ticks}/${RESEARCH_TICKS}</div></div>`).join('')
+    : `<div class="cab-empty">Nothing being internalised yet.</div>`;
+
+  const unslotted = Object.values(state.thoughts.seen).filter(t=>!t.slotted && !t.done);
+  discEl.innerHTML = unslotted.length ? unslotted.map(t=>`
+    <div class="cab-item clickable" data-text="${escapeHtml(t.text)}"><span class="voice-tag ${t.voiceCls}">${t.voiceName}</span>${escapeHtml(t.text)}
+    <div class="prog">tap to internalise${state.thoughts.slots.length>=CABINET_SLOTS?' — no free slots':''}</div></div>`).join('')
+    : `<div class="cab-empty">No unslotted thoughts.</div>`;
+  discEl.querySelectorAll('.cab-item.clickable').forEach(el=>{
+    el.onclick = ()=> slotThought(el.dataset.text);
+  });
+
+  doneEl.innerHTML = state.thoughts.done.length ? state.thoughts.done.map(t=>`
+    <div class="cab-item"><span class="voice-tag ${t.voiceCls}">${t.voiceName}</span>${escapeHtml(t.text)}</div>`).join('')
+    : `<div class="cab-empty">None internalised yet.</div>`;
+}
+document.getElementById('cabinet-btn').onclick = ()=>{
+  renderCabinet();
+  document.getElementById('cabinet-modal').classList.add('show');
+  document.getElementById('cabinet-badge').classList.remove('on');
+};
+document.getElementById('cabinet-close').onclick = ()=> document.getElementById('cabinet-modal').classList.remove('show');
+document.getElementById('cabinet-modal').addEventListener('click', e=>{
+  if(e.target.id==='cabinet-modal') document.getElementById('cabinet-modal').classList.remove('show');
+});
 function paragraphs(txt){
   return txt.split("\n\n").map(p=>`<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
 }
