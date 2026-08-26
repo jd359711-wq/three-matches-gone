@@ -339,7 +339,7 @@
   }
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
 
-  /* ---------- THOUGHT CABINET ---------- */
+  /* ---------- THE MATCHBOOK ---------- */
   #cabinet-btn{
     background:none; border:1px solid var(--amber-dim); color:var(--amber);
     width:26px; height:26px; border-radius:50%; font-size:12px;
@@ -410,7 +410,7 @@
 <div id="app">
   <div id="backdrop" class="grain"></div>
   <header>
-    <button id="cabinet-btn" aria-label="Thought Cabinet">◆<span id="cabinet-badge"></span></button>
+    <button id="cabinet-btn" aria-label="The Matchbook">🔥<span id="cabinet-badge"></span></button>
     <div class="title">Three Matches Gone</div>
     <div class="gauges">
       <div class="gauge clarity">CLA<div class="bar"><div class="fill" id="fill-clarity"></div></div></div>
@@ -419,10 +419,10 @@
   </header>
   <div id="cabinet-modal">
     <div id="cabinet-inner">
-      <div class="cab-head">THOUGHT CABINET <span id="cabinet-close">✕</span></div>
-      <div class="cab-section"><div class="cab-label">Internalising</div><div id="cab-slots"></div></div>
-      <div class="cab-section"><div class="cab-label">Unslotted</div><div id="cab-discovered"></div></div>
-      <div class="cab-section"><div class="cab-label">Internalised</div><div id="cab-done"></div></div>
+      <div class="cab-head">THE MATCHBOOK <span id="cabinet-close">✕</span></div>
+      <div class="cab-section"><div class="cab-label">Still Smoldering</div><div id="cab-slots"></div></div>
+      <div class="cab-section"><div class="cab-label">Unstruck</div><div id="cab-discovered"></div></div>
+      <div class="cab-section"><div class="cab-label">Burned In</div><div id="cab-done"></div></div>
     </div>
   </div>
   <div id="thought-toast"></div>
@@ -1344,7 +1344,7 @@ function beep(freq, dur, type){
 function showCheck(stat, pass, cb){
   const banner = document.getElementById('check-banner');
   const isWhite = stat==='clarity';
-  document.getElementById('check-label').textContent = (isWhite?'WHITE':'RED')+' CHECK — '+stat.toUpperCase()+(isWhite?'':' (no take-backs)');
+  document.getElementById('check-label').textContent = (isWhite?'STEADY':'LIVE')+' CHECK — '+stat.toUpperCase()+(isWhite?'':' (no going back)');
   const diceEl = document.getElementById('check-dice');
   const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
   const cls = stat==='clarity' ? 'white' : 'red';
@@ -1447,7 +1447,7 @@ function render(){
     const b = document.createElement('button');
     b.className='choice';
     const tag = checkTag(label);
-    b.innerHTML = escapeHtml(label) + (tag ? `<span class="tag">${tag.stat==='clarity'?'WHITE':'RED'} — ${tag.stat.toUpperCase()}</span>` : '');
+    b.innerHTML = escapeHtml(label) + (tag ? `<span class="tag">${tag.stat==='clarity'?'STEADY':'LIVE'} — ${tag.stat.toUpperCase()}</span>` : '');
     b.onclick = ()=>{
       beep(320,0.06,'square');
       const advance = ()=>{
@@ -1489,22 +1489,22 @@ function flagLabel(f){
 
 /* ---------- INNER VOICES (skill archetypes) ---------- */
 const VOICES = [
-  {id:'logic', name:'LOGIC', cls:'v-logic', re:/logic|evidence|fact|deduce|proof|timeline|line up|add up|clean/i, stat:'clarity'},
-  {id:'empire', name:'INLAND EMPIRE', cls:'v-empire', re:/remember|memory|dream|vision|real or not|impossible|ghost/i, stat:'clarity'},
-  {id:'volition', name:'VOLITION', cls:'v-volition', re:/should|discipline|resolve|stand|refuse|decide|not going to|last chance/i, stat:'nerve'},
-  {id:'physical', name:'PHYSICAL INSTRUMENT', cls:'v-physical', re:/hurt|pain|body|run|fight|survive|blood|throb/i, stat:'nerve'},
-  {id:'empathy', name:'EMPATHY', cls:'v-empathy', re:/she|her|sorry|care|protect|gift|kindness/i, stat:'clarity'},
+  {id:'record', name:'THE RECORD', cls:'v-logic', re:/logic|evidence|fact|deduce|proof|timeline|line up|add up|clean/i, stat:'clarity'},
+  {id:'static', name:'THE STATIC', cls:'v-empire', re:/remember|memory|dream|vision|real or not|impossible|ghost/i, stat:'clarity'},
+  {id:'spine', name:'THE SPINE', cls:'v-volition', re:/should|discipline|resolve|stand|refuse|decide|not going to|last chance/i, stat:'nerve'},
+  {id:'pulse', name:'THE PULSE', cls:'v-physical', re:/hurt|pain|body|run|fight|survive|blood|throb/i, stat:'nerve'},
+  {id:'ache', name:'THE ACHE', cls:'v-empathy', re:/she|her|sorry|care|protect|gift|kindness/i, stat:'clarity'},
 ];
 function classifyVoice(text){
   for(const v of VOICES){ if(v.re.test(text)) return v; }
-  return {id:'suggestion', name:'SUGGESTION', cls:'v-suggestion', stat:'clarity'};
+  return {id:'hunch', name:'THE HUNCH', cls:'v-suggestion', stat:'clarity'};
 }
 
-/* ---------- THOUGHT CABINET ---------- */
+/* ---------- THE MATCHBOOK (thought-collection system) ---------- */
 function initThoughts(){
   if(!state.thoughts) state.thoughts = { seen:{}, slots:[], done:[] };
 }
-const CABINET_SLOTS = 3;
+const CABINET_SLOTS = 3; // three matches — matches the title
 const RESEARCH_TICKS = 4;
 
 function maybeDiscoverThought(text){
@@ -1512,7 +1512,7 @@ function maybeDiscoverThought(text){
   if(state.thoughts.seen[text]) return;
   const voice = classifyVoice(text);
   state.thoughts.seen[text] = {text, voiceId:voice.id, voiceName:voice.name, voiceCls:voice.cls, stat:voice.stat, slotted:false, done:false};
-  showThoughtToast('NEW THOUGHT: '+voice.name);
+  showThoughtToast('SOMETHING CAUGHT: '+voice.name);
   document.getElementById('cabinet-badge').classList.add('on');
 }
 function showThoughtToast(msg){
@@ -1533,7 +1533,7 @@ function tickThoughts(){
         if(entry){ entry.done = true; entry.slotted = false; }
         if(s.stat === 'clarity') state.clarity = clamp(state.clarity+1);
         else state.nerve = clamp(state.nerve+1);
-        showThoughtToast('INTERNALISED: '+s.voiceName);
+        showThoughtToast('BURNED IN: '+s.voiceName);
         changed = true;
       }
     }
@@ -1561,13 +1561,13 @@ function renderCabinet(){
 
   slotsEl.innerHTML = state.thoughts.slots.length ? state.thoughts.slots.map(s=>`
     <div class="cab-item"><span class="voice-tag ${s.voiceCls}">${s.voiceName}</span>${escapeHtml(s.text)}
-    <div class="prog">researching — ${s.ticks}/${RESEARCH_TICKS}</div></div>`).join('')
+    <div class="prog">catching — ${s.ticks}/${RESEARCH_TICKS}</div></div>`).join('')
     : `<div class="cab-empty">Nothing being internalised yet.</div>`;
 
   const unslotted = Object.values(state.thoughts.seen).filter(t=>!t.slotted && !t.done);
   discEl.innerHTML = unslotted.length ? unslotted.map(t=>`
     <div class="cab-item clickable" data-text="${escapeHtml(t.text)}"><span class="voice-tag ${t.voiceCls}">${t.voiceName}</span>${escapeHtml(t.text)}
-    <div class="prog">tap to internalise${state.thoughts.slots.length>=CABINET_SLOTS?' — no free slots':''}</div></div>`).join('')
+    <div class="prog">tap to strike${state.thoughts.slots.length>=CABINET_SLOTS?' — no matches left':''}</div></div>`).join('')
     : `<div class="cab-empty">No unslotted thoughts.</div>`;
   discEl.querySelectorAll('.cab-item.clickable').forEach(el=>{
     el.onclick = ()=> slotThought(el.dataset.text);
