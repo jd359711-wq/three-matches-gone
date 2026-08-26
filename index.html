@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Three Matches Gone</title>
 <meta name="theme-color" content="#0b0a08">
 <link rel="manifest" href="manifest.json">
@@ -12,135 +12,207 @@
 <style>
   :root{
     --bg:#0b0a08;
-    --panel:#14110d;
-    --ink:#e9dfc9;
-    --dim:#8d8270;
-    --amber:#d98c3f;
+    --panel:#15120d;
+    --panel2:#1b170f;
+    --ink:#ece2cc;
+    --dim:#948a76;
+    --amber:#e0995a;
     --amber-dim:#7a5326;
-    --rule:#2a2419;
-    --evidence:#c94f3a;
+    --rule:#302a1c;
+    --evidence:#c9573f;
+    --clarity:#5fa8d9;
+    --nerve:#c9573f;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{height:100%; overscroll-behavior:none;}
   body{
     margin:0;
-    background:
-      radial-gradient(ellipse at 50% -10%, rgba(217,140,63,0.08), transparent 60%),
-      var(--bg);
+    background:#000;
     color:var(--ink);
     font-family:Georgia, 'Times New Roman', serif;
-    min-height:100%;
     display:flex;
     justify-content:center;
+    overflow:hidden;
   }
   #app{
     width:100%;
     max-width:640px;
-    min-height:100vh;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    height:100vh;
+    height:100dvh;
+    position:relative;
     display:flex;
     flex-direction:column;
-  }
-  header{
-    padding:18px 20px 10px;
-    border-bottom:1px solid var(--rule);
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    position:sticky;
-    top:0;
     background:var(--bg);
-    z-index:5;
+  }
+
+  /* ---------- BACKDROP ---------- */
+  #backdrop{
+    position:absolute; inset:0;
+    overflow:hidden;
+    transition:filter .6s ease;
+  }
+  #backdrop svg{width:100%; height:100%; display:block;}
+  #backdrop::after{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 85%),
+      linear-gradient(to bottom, rgba(11,10,8,0) 40%, rgba(11,10,8,0.97) 92%);
+    pointer-events:none;
+  }
+  #backdrop.grain::before{
+    content:'';
+    position:absolute; inset:0;
+    opacity:0.05;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- TOP BAR ---------- */
+  header{
+    position:relative; z-index:5;
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
   }
   header .title{
     font-family:'Courier New', monospace;
-    letter-spacing:0.12em;
-    font-size:12px;
+    letter-spacing:0.14em;
+    font-size:10px;
     color:var(--amber);
     text-transform:uppercase;
+    text-shadow:0 1px 3px rgba(0,0,0,0.8);
   }
-  header .stats{
+  .gauges{display:flex; gap:10px;}
+  .gauge{
     font-family:'Courier New', monospace;
-    font-size:10px;
-    color:var(--dim);
-    letter-spacing:0.05em;
-    text-align:right;
-    line-height:1.5;
+    font-size:9px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    text-shadow:0 1px 3px rgba(0,0,0,0.9);
   }
-  .stat-hi{color:var(--amber);}
-  main{
-    flex:1;
-    padding:24px 22px 8px;
+  .gauge .bar{
+    width:34px; height:4px;
+    background:rgba(255,255,255,0.15);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .gauge .fill{height:100%; border-radius:2px; transition:width .4s ease;}
+  .gauge.clarity .fill{background:var(--clarity);}
+  .gauge.nerve .fill{background:var(--nerve);}
+
+  /* ---------- STAGE (spacer so card doesn't cover backdrop focal point) ---------- */
+  #stage{flex:1; position:relative; z-index:2;}
+
+  /* ---------- CHECK BANNER ---------- */
+  #check-banner{
+    position:absolute;
+    left:50%; top:38%;
+    transform:translate(-50%,-50%) scale(0.9);
+    z-index:20;
+    background:rgba(10,9,7,0.92);
+    border:1px solid var(--amber-dim);
+    padding:14px 22px;
+    border-radius:3px;
+    text-align:center;
+    font-family:'Courier New', monospace;
+    letter-spacing:0.1em;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  #check-banner.show{opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto;}
+  #check-banner .label{font-size:11px; color:var(--dim); text-transform:uppercase;}
+  #check-banner .result{font-size:20px; margin-top:6px; letter-spacing:0.15em;}
+  #check-banner .result.pass{color:#7fbf6a;}
+  #check-banner .result.fail{color:var(--evidence);}
+
+  /* ---------- DIALOGUE CARD ---------- */
+  #dialogue{
+    position:relative; z-index:5;
+    background:linear-gradient(to bottom, rgba(21,18,13,0.85), var(--panel) 18px);
+    border-top:1px solid var(--rule);
+    padding:18px 18px calc(env(safe-area-inset-bottom) + 14px);
+    max-height:62vh;
+    overflow-y:auto;
   }
   #scene-text{
-    font-size:18px;
-    line-height:1.65;
+    font-size:16.5px;
+    line-height:1.6;
     color:var(--ink);
   }
-  #scene-text p{margin:0 0 1em;}
+  #scene-text p{margin:0 0 0.85em;}
   #scene-text .thought{
     display:block;
-    margin-top:1.2em;
-    padding-left:14px;
+    margin-top:1em;
+    padding-left:12px;
     border-left:2px solid var(--amber-dim);
     color:var(--amber);
     font-style:italic;
-    font-size:16px;
+    font-size:14.5px;
   }
   #choices{
-    padding:6px 16px 28px;
+    margin-top:14px;
     display:flex;
     flex-direction:column;
-    gap:10px;
+    gap:8px;
   }
   button.choice{
     font-family:Georgia, serif;
-    font-size:16px;
+    font-size:15px;
     text-align:left;
-    background:var(--panel);
+    background:var(--panel2);
     color:var(--ink);
     border:1px solid var(--rule);
     border-left:3px solid var(--amber-dim);
-    padding:14px 16px;
+    padding:12px 14px;
     border-radius:2px;
     cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
   }
-  button.choice:active{
-    background:#1c1810;
-    border-left-color:var(--amber);
+  button.choice:active{background:#231d13; border-left-color:var(--amber);}
+  button.choice .tag{
+    font-family:'Courier New', monospace;
+    font-size:9px;
+    color:var(--nerve);
+    letter-spacing:0.08em;
+    display:block;
+    margin-top:3px;
   }
   #evidence-bar{
-    padding:0 22px 18px;
+    margin-top:12px;
     display:flex;
     flex-wrap:wrap;
-    gap:8px;
+    gap:6px;
   }
   .ev-chip{
     font-family:'Courier New', monospace;
-    font-size:10px;
-    letter-spacing:0.06em;
+    font-size:9px;
+    letter-spacing:0.05em;
     text-transform:uppercase;
     color:var(--evidence);
     border:1px solid #3a2420;
-    padding:4px 8px;
+    padding:3px 7px;
     border-radius:2px;
     background:rgba(201,79,58,0.08);
   }
-  #end-screen{
-    padding:40px 22px;
-    text-align:center;
-  }
+
+  /* ---------- END SCREEN ---------- */
+  #end-screen{padding:30px 4px 6px; text-align:center;}
   #end-screen h2{
     font-family:'Courier New', monospace;
-    letter-spacing:0.1em;
+    letter-spacing:0.12em;
     color:var(--amber);
     text-transform:uppercase;
-    font-size:14px;
-    margin-bottom:18px;
+    font-size:13px;
+    margin-bottom:14px;
   }
   #restart{
-    margin-top:24px;
+    margin-top:18px;
     background:none;
     border:1px solid var(--amber-dim);
     color:var(--amber);
@@ -152,25 +224,226 @@
     text-transform:uppercase;
     font-size:11px;
   }
-  .fade{animation:fadeIn .35s ease both;}
-  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
-  @media (prefers-reduced-motion: reduce){.fade{animation:none;}}
+
+  /* ---------- MINIGAME OVERLAY ---------- */
+  #minigame{
+    position:fixed; inset:0;
+    z-index:100;
+    background:#000;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  #minigame.active{display:flex;}
+  #minigame canvas{
+    image-rendering:pixelated;
+    width:min(92vw, 480px);
+    height:auto;
+    border:2px solid #333;
+    box-shadow:0 0 0 6px #000, 0 0 40px rgba(224,153,90,0.15);
+  }
+  #minigame .mg-hud{
+    font-family:'Courier New', monospace;
+    color:var(--amber);
+    letter-spacing:0.15em;
+    font-size:11px;
+    text-transform:uppercase;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  #minigame .mg-controls{
+    display:flex; gap:16px; margin-top:16px; width:min(92vw,480px);
+  }
+  #minigame .mg-btn{
+    flex:1;
+    padding:22px 0;
+    background:#161310;
+    border:1px solid #333;
+    color:var(--amber);
+    font-family:'Courier New', monospace;
+    font-size:20px;
+    border-radius:4px;
+  }
+  #minigame .mg-btn:active{background:#2a2416;}
+  #minigame .mg-scanlines{
+    position:absolute; inset:0;
+    pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0.25) 0px, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:multiply;
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
 </style>
 </head>
 <body>
 <div id="app">
+  <div id="backdrop" class="grain"></div>
   <header>
     <div class="title">Three Matches Gone</div>
-    <div class="stats" id="stats"></div>
+    <div class="gauges">
+      <div class="gauge clarity">CLA<div class="bar"><div class="fill" id="fill-clarity"></div></div></div>
+      <div class="gauge nerve">NRV<div class="bar"><div class="fill" id="fill-nerve"></div></div></div>
+    </div>
   </header>
-  <main id="main"></main>
-  <div id="choices"></div>
-  <div id="evidence-bar"></div>
+  <div id="stage">
+    <div id="check-banner"><div class="label" id="check-label"></div><div class="result" id="check-result"></div></div>
+  </div>
+  <div id="dialogue"><div id="main"></div><div id="choices"></div><div id="evidence-bar"></div></div>
+</div>
+
+<div id="minigame">
+  <div class="mg-hud" id="mg-hud">THE FOLD</div>
+  <canvas id="mg-canvas" width="160" height="120"></canvas>
+  <div class="mg-controls">
+    <button class="mg-btn" id="mg-left">◀</button>
+    <button class="mg-btn" id="mg-right">▶</button>
+  </div>
+  <div class="mg-scanlines"></div>
 </div>
 
 <script>
-/* ---------- STORY DATA ---------- */
-/* text: string, or {low,mid,high} variant object. repeatText overrides on revisit. */
+/* ---------- BACKDROPS ----------
+   Hand-built SVG "paintings" in a Hopper-noir palette, not literal photos —
+   evoked locations rather than illustrated portraits, kept lightweight (no image assets to load). */
+const BACKDROPS = {
+  park:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0d1017"/>
+    <rect y="0" width="400" height="180" fill="#141a24"/>
+    <circle cx="90" cy="50" r="26" fill="#f4e6b8" opacity="0.9"/>
+    <circle cx="90" cy="50" r="45" fill="#f4e6b8" opacity="0.08"/>
+    <rect x="0" y="175" width="400" height="125" fill="#0a0e10"/>
+    <path d="M0 190 Q100 175 200 188 T400 182 V300 H0 Z" fill="#10151a"/>
+    <rect x="130" y="205" width="140" height="8" fill="#1c2530"/>
+    <rect x="150" y="195" width="6" height="12" fill="#1c2530"/>
+    <rect x="250" y="195" width="6" height="12" fill="#1c2530"/>
+    <rect x="30" y="60" width="4" height="140" fill="#2a2015"/>
+    <ellipse cx="32" cy="55" rx="30" ry="10" fill="#3a3a20" opacity="0.5"/>
+    <rect x="320" y="70" width="4" height="130" fill="#2a2015"/>
+    <ellipse cx="322" cy="65" rx="26" ry="9" fill="#3a3a20" opacity="0.4"/>
+  </svg>`,
+
+  alley:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0a0a0c"/>
+    <rect x="0" y="0" width="400" height="230" fill="#161511"/>
+    <rect x="120" y="60" width="160" height="170" fill="#0e0d0b"/>
+    <rect x="140" y="90" width="30" height="45" fill="#241f14" opacity="0.7"/>
+    <rect x="230" y="90" width="30" height="45" fill="#3a2c14" opacity="0.85"/>
+    <rect x="185" y="150" width="30" height="70" fill="#050403"/>
+    <circle cx="150" cy="70" r="3" fill="#e0995a"/>
+    <rect x="148" y="72" width="4" height="14" fill="#3a2c1a"/>
+    <rect x="0" y="228" width="400" height="72" fill="#050505"/>
+    <rect x="60" y="235" width="18" height="18" fill="#1a1a1a"/>
+  </svg>`,
+
+  'bakery-int':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#120d08"/>
+    <rect x="0" y="0" width="400" height="200" fill="#1c140c"/>
+    <rect x="20" y="140" width="360" height="14" fill="#2a1c10"/>
+    <circle cx="90" cy="90" r="20" fill="#e0995a" opacity="0.55"/>
+    <circle cx="90" cy="90" r="40" fill="#e0995a" opacity="0.12"/>
+    <rect x="250" y="60" width="90" height="70" fill="#0d0906"/>
+    <rect x="260" y="70" width="70" height="50" fill="#3a2410" opacity="0.6"/>
+    <rect x="0" y="198" width="400" height="102" fill="#0a0705"/>
+    <rect x="150" y="205" width="100" height="10" fill="#241a10"/>
+    <circle cx="200" cy="200" r="6" fill="#e0995a" opacity="0.8"/>
+  </svg>`,
+
+  'street-diner-ext':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0a0d12"/>
+    <rect x="0" y="0" width="400" height="210" fill="#12161d"/>
+    <rect x="60" y="90" width="150" height="110" fill="#181008"/>
+    <rect x="75" y="100" width="120" height="55" fill="#c9573f" opacity="0.35"/>
+    <rect x="75" y="100" width="120" height="55" fill="#e0995a" opacity="0.12"/>
+    <rect x="0" y="205" width="400" height="95" fill="#06070a"/>
+    <circle cx="330" cy="70" r="3" fill="#e0995a" opacity="0.6"/>
+  </svg>`,
+
+  diner:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#100c0a"/>
+    <rect x="0" y="0" width="400" height="180" fill="#1a1210"/>
+    <rect x="0" y="175" width="400" height="10" fill="#3a1f18"/>
+    <rect x="40" y="120" width="90" height="55" fill="#7a2418" opacity="0.5"/>
+    <rect x="270" y="120" width="90" height="55" fill="#7a2418" opacity="0.4"/>
+    <rect x="0" y="185" width="400" height="115" fill="#0a0605"/>
+    <circle cx="200" cy="60" r="4" fill="#e0995a" opacity="0.7"/>
+  </svg>`,
+
+  apartment:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0a0b10"/>
+    <rect x="60" y="10" width="280" height="230" fill="#161a22"/>
+    <rect x="90" y="40" width="40" height="50" fill="#e0995a" opacity="0.5"/>
+    <rect x="150" y="40" width="40" height="50" fill="#0a0a0c"/>
+    <rect x="210" y="40" width="40" height="50" fill="#3a3020" opacity="0.6"/>
+    <rect x="270" y="40" width="40" height="50" fill="#0a0a0c"/>
+    <rect x="90" y="110" width="40" height="50" fill="#0a0a0c"/>
+    <rect x="150" y="110" width="40" height="50" fill="#e0995a" opacity="0.35"/>
+    <rect x="210" y="110" width="40" height="50" fill="#0a0a0c"/>
+    <rect x="270" y="110" width="40" height="50" fill="#0a0a0c"/>
+    <rect x="0" y="238" width="400" height="62" fill="#050505"/>
+  </svg>`,
+
+  'street-night':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#07080c"/>
+    <rect x="0" y="0" width="400" height="215" fill="#0e1118"/>
+    <rect x="0" y="210" width="400" height="90" fill="#050608"/>
+    <circle cx="200" cy="80" r="4" fill="#e0995a" opacity="0.9"/>
+    <rect x="198" y="84" width="4" height="120" fill="#241f1a" opacity="0.6"/>
+    <ellipse cx="200" cy="215" rx="60" ry="10" fill="#e0995a" opacity="0.15"/>
+    <rect x="330" y="140" width="26" height="70" fill="#12141a" opacity="0.7"/>
+  </svg>`,
+
+  office:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0c0d0e"/>
+    <rect x="0" y="0" width="400" height="220" fill="#161613"/>
+    <rect x="0" y="60" width="400" height="6" fill="#e0995a" opacity="0.18"/>
+    <rect x="140" y="90" width="120" height="80" fill="#0a0a08"/>
+    <rect x="150" y="100" width="100" height="60" fill="#2a2a1f" opacity="0.4"/>
+    <rect x="0" y="215" width="400" height="85" fill="#070706"/>
+  </svg>`,
+
+  liminal:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#0a0810"/>
+    <rect x="0" y="0" width="400" height="300" fill="#120e1c" opacity="0.6"/>
+    <circle cx="200" cy="140" r="90" fill="#5f3a6d" opacity="0.18"/>
+    <circle cx="200" cy="140" r="50" fill="#c9573f" opacity="0.12"/>
+  </svg>`,
+
+  confrontation:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#08090b"/>
+    <rect x="0" y="0" width="400" height="240" fill="#111214"/>
+    <rect x="170" y="70" width="60" height="130" fill="#050505"/>
+    <ellipse cx="200" cy="65" rx="34" ry="34" fill="#050505"/>
+    <rect x="0" y="235" width="400" height="65" fill="#040404"/>
+    <rect x="0" y="90" width="400" height="4" fill="#e0995a" opacity="0.12"/>
+  </svg>`,
+
+  dawn:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#1a1a22"/>
+    <rect x="0" y="0" width="400" height="200" fill="#2a2438"/>
+    <rect x="0" y="150" width="400" height="50" fill="#7a5548" opacity="0.5"/>
+    <rect x="0" y="195" width="400" height="105" fill="#0e0d10"/>
+    <circle cx="80" cy="60" r="18" fill="#e8a869" opacity="0.5"/>
+  </svg>`
+};
+
+function sceneKey(id){
+  if(/^(start|dirNorth|dirSouth|dirEast|dirWest|loopBack|arriveBakeryAgain)$/.test(id)) return 'park';
+  if(/^(approachDoor|matchbook|checkPockets|pocket|tryRemember|readReceipt|tryDoor|keypad|backAlley|backDoor|fireEscape|windowPeer|backDeadEnd|baker)/.test(id)) return 'alley';
+  if(id==='chapterEndReal' || /^(c2_|c14_|b1_|b2_|b3_)/.test(id)) return 'bakery-int';
+  if(/^c3_/.test(id)) return 'street-diner-ext';
+  if(/^(c4_|c8_a3|c9_a3|c12_a3|c13_a3)/.test(id)) return 'diner';
+  if(/^(c5_|c6_|a1_stub|a2_stub|a3_stub|c10_|c11_)/.test(id)) return 'street-night';
+  if(/^(c7_|c18_|c22_)/.test(id)) return 'liminal';
+  if(/^(c8_a1|c9_(?!a2|a3)|c12_a1|c13_a1)/.test(id)) return 'apartment';
+  if(/^(c8_a2|c9_a2|c12_a2|c19_evidence)/.test(id)) return 'office';
+  if(/^(c19_visions|c19_noOne)/.test(id)) return 'liminal';
+  if(/^c23_/.test(id)) return 'confrontation';
+  if(/^(cs_|hn_|vn_|nw_)/.test(id)) return 'dawn';
+  return 'street-night';
+}
+function renderBackdrop(id){
+  document.getElementById('backdrop').innerHTML = BACKDROPS[sceneKey(id)] || BACKDROPS['street-night'];
+}
 const S = {
 
 start:{ text:{
@@ -828,9 +1101,9 @@ nw_aftermath:{text:"The bench feels exactly the same as it did the first time. T
 nw_finalImage:{text:"Scratched into the inside of the matchbook cover, in handwriting you'd recognize as your own even if you'd never seen it before: \"Better luck next time, Doc.\"",
   ending:"No Waking Up", choices:[]}
 };
-
 /* ---------- ENGINE ---------- */
 let state = { node:"start", clarity:5, nerve:5, visited:{}, flags:{} };
+const FOLD_NODES = new Set(['c7_montage1','c18_montage1','c22_blackout_montage']);
 
 function tier(){
   const avg = (state.clarity+state.nerve)/2;
@@ -842,6 +1115,36 @@ function pickText(node){
   const t = tier();
   return node.text[t] || node.text.mid || Object.values(node.text)[0];
 }
+function checkTag(label){
+  if(/run|push|demand|confront|burn|strike a match|hold your ground/i.test(label)) return {stat:'nerve', d:6};
+  if(/wait|stay quiet|let it drop|leave|calm|hide|stillness/i.test(label)) return {stat:'nerve', d:4};
+  if(/pills|take one|drink/i.test(label)) return {stat:'clarity', d:5};
+  if(/remember|read|search|evidence|cross-reference|timeline/i.test(label)) return {stat:'clarity', d:6};
+  return null;
+}
+
+function beep(freq, dur, type){
+  try{
+    const ctx = window.__audioCtx || (window.__audioCtx = new (window.AudioContext||window.webkitAudioContext)());
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = type||'square'; o.frequency.value = freq;
+    g.gain.value = 0.05;
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+function showCheck(stat, pass, cb){
+  const banner = document.getElementById('check-banner');
+  document.getElementById('check-label').textContent = stat.toUpperCase()+' CHECK';
+  const r = document.getElementById('check-result');
+  r.textContent = pass ? 'PASSED' : 'FAILED';
+  r.className = 'result '+(pass?'pass':'fail');
+  banner.classList.add('show');
+  beep(pass?660:180, pass?0.18:0.3, pass?'square':'sawtooth');
+  setTimeout(()=>{ banner.classList.remove('show'); cb && cb(); }, 900);
+}
 
 function render(){
   const node = S[state.node];
@@ -850,21 +1153,20 @@ function render(){
   const evEl = document.getElementById('evidence-bar');
 
   if(node.flag) state.flags[node.flag]=true;
+  renderBackdrop(state.node);
 
   if(node.ending){
     main.innerHTML = `<div id="end-screen" class="fade">
-      <h2>End of Night</h2>
+      <h2>End of Night — ${node.ending}</h2>
       <div id="scene-text">${paragraphs(pickText(node))}</div>
       <button id="restart">Begin again</button>
     </div>`;
-    choicesEl.innerHTML="";
-    evEl.innerHTML="";
+    choicesEl.innerHTML=""; evEl.innerHTML="";
     document.getElementById('restart').onclick = ()=>{
       state = { node:"start", clarity:5, nerve:5, visited:{}, flags:{} };
       render();
     };
-    saveState();
-    updateStats();
+    saveState(); updateStats();
     return;
   }
 
@@ -875,17 +1177,32 @@ function render(){
   node.choices.forEach(([label,target])=>{
     const b = document.createElement('button');
     b.className='choice';
-    b.textContent = label;
+    const tag = checkTag(label);
+    b.innerHTML = escapeHtml(label) + (tag ? `<span class="tag">${tag.stat.toUpperCase()} CHECK</span>` : '');
     b.onclick = ()=>{
-      state.visited[state.node]=true;
-      state.node = target;
-      // light stat drift based on action verbs, keeps clarity/nerve alive without hard gating
-      if(/run|push|demand|confront|burn/i.test(label)) state.nerve = clamp(state.nerve-1);
-      if(/wait|stay quiet|let it drop|leave|calm/i.test(label)) state.nerve = clamp(state.nerve+1);
-      if(/pills|take one|drink/i.test(label)) state.clarity = clamp(state.clarity-1);
-      if(/remember|read|search|evidence/i.test(label)) state.clarity = clamp(state.clarity+1);
-      render();
-      window.scrollTo(0,0);
+      beep(320,0.06,'square');
+      const advance = ()=>{
+        state.visited[state.node]=true;
+        state.node = target;
+        if(/run|push|demand|confront|burn/i.test(label)) state.nerve = clamp(state.nerve-1);
+        if(/wait|stay quiet|let it drop|leave|calm/i.test(label)) state.nerve = clamp(state.nerve+1);
+        if(/pills|take one|drink/i.test(label)) state.clarity = clamp(state.clarity-1);
+        if(/remember|read|search|evidence/i.test(label)) state.clarity = clamp(state.clarity+1);
+
+        if(FOLD_NODES.has(target)){
+          runMinigame(()=>{ render(); window.scrollTo(0,0); });
+          return;
+        }
+        render();
+        window.scrollTo(0,0);
+      };
+      if(tag){
+        const val = state[tag.stat];
+        const pass = val + Math.floor(Math.random()*4) >= tag.d;
+        showCheck(tag.stat, pass, advance);
+      } else {
+        advance();
+      }
     };
     choicesEl.appendChild(b);
   });
@@ -906,11 +1223,109 @@ function escapeHtml(s){
 }
 function clamp(n){return Math.max(0,Math.min(10,n));}
 function updateStats(){
-  document.getElementById('stats').innerHTML =
-    `CLARITY <span class="${state.clarity>=7?'stat-hi':''}">${state.clarity}</span> · NERVE <span class="${state.nerve>=7?'stat-hi':''}">${state.nerve}</span>`;
+  document.getElementById('fill-clarity').style.width = (state.clarity*10)+'%';
+  document.getElementById('fill-nerve').style.width = (state.nerve*10)+'%';
 }
 
-/* ---------- PERSISTENCE (window.storage, falls back silently) ---------- */
+/* ---------- RETRO MINIGAME: "THE FOLD" ----------
+   Triggered at the script's own blackout/fade-state beats (Ch.7, 18, 22) —
+   the WORLD/MIND/GAME/RETURN doctrine's "GAME" translation layer, made literal
+   as an 8-bit dodge sequence. Fail-soft: always returns to the story. */
+function runMinigame(onDone){
+  const overlay = document.getElementById('minigame');
+  const canvas = document.getElementById('mg-canvas');
+  const ctx = canvas.getContext('2d');
+  const hud = document.getElementById('mg-hud');
+  overlay.classList.add('active');
+
+  let player = {x:80, y:104, w:10, h:10};
+  let obstacles = [];
+  let t = 0;
+  const DURATION = 9000; // ms
+  let startTime = null;
+  let dir = 0;
+  let running = true;
+  let hits = 0;
+
+  function spawnObstacle(){
+    obstacles.push({x: Math.random()*150+5, y:-8, w:8, h:8, speed: 1.2+Math.random()*1.3});
+  }
+
+  const leftBtn = document.getElementById('mg-left');
+  const rightBtn = document.getElementById('mg-right');
+  function setDir(d){ dir = d; }
+  const onLeftDown=()=>setDir(-1), onRightDown=()=>setDir(1), onUp=()=>setDir(0);
+  leftBtn.addEventListener('touchstart', onLeftDown); leftBtn.addEventListener('mousedown', onLeftDown);
+  rightBtn.addEventListener('touchstart', onRightDown); rightBtn.addEventListener('mousedown', onRightDown);
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev=>{
+    leftBtn.addEventListener(ev,onUp); rightBtn.addEventListener(ev,onUp);
+  });
+  function onKey(e){
+    if(e.key==='ArrowLeft') setDir(-1);
+    if(e.key==='ArrowRight') setDir(1);
+  }
+  function onKeyUp(e){ if(e.key==='ArrowLeft'||e.key==='ArrowRight') setDir(0); }
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('keyup', onKeyUp);
+
+  let spawnTimer = 0;
+
+  function loop(ts){
+    if(!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+    const remaining = Math.max(0, DURATION - elapsed);
+    hud.textContent = 'THE FOLD — HOLD — ' + Math.ceil(remaining/1000) + 's';
+
+    player.x += dir*2.2;
+    player.x = Math.max(4, Math.min(146, player.x));
+
+    spawnTimer++;
+    if(spawnTimer > 26){ spawnObstacle(); spawnTimer = 0; }
+
+    obstacles.forEach(o=> o.y += o.speed*2);
+    obstacles = obstacles.filter(o=>{
+      if(o.y > 120) return false;
+      const hit = o.x < player.x+player.w && o.x+o.w > player.x && o.y < player.y+player.h && o.y+o.h > player.y;
+      if(hit){ hits++; beep(140,0.15,'sawtooth'); return false; }
+      return true;
+    });
+
+    ctx.fillStyle = '#0a0812';
+    ctx.fillRect(0,0,160,120);
+    // pixel starfield / fold texture
+    ctx.fillStyle = 'rgba(224,153,90,0.15)';
+    for(let i=0;i<12;i++){ ctx.fillRect((i*37+ (elapsed/30|0))%160, (i*53)%120, 1,1); }
+
+    ctx.fillStyle = '#e0995a';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = '#c9573f';
+    obstacles.forEach(o=> ctx.fillRect(o.x,o.y,o.w,o.h));
+
+    if(elapsed < DURATION && running){
+      requestAnimationFrame(loop);
+    } else if(running){
+      finish();
+    }
+  }
+
+  function finish(){
+    running = false;
+    hud.textContent = hits>=3 ? 'FOLD HOLDS ANYWAY' : 'YOU HOLD';
+    beep(500,0.2,'square');
+    setTimeout(()=>{
+      overlay.classList.remove('active');
+      leftBtn.removeEventListener('touchstart', onLeftDown); leftBtn.removeEventListener('mousedown', onLeftDown);
+      rightBtn.removeEventListener('touchstart', onRightDown); rightBtn.removeEventListener('mousedown', onRightDown);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKeyUp);
+      onDone();
+    }, 700);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+/* ---------- PERSISTENCE ---------- */
 async function saveState(){
   try{ if(window.storage) await window.storage.set('tmg-save', JSON.stringify(state)); }catch(e){}
 }
@@ -924,7 +1339,6 @@ async function loadState(){
   render();
 }
 
-/* ---------- PWA ---------- */
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('service-worker.js').catch(()=>{});
