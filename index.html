@@ -57,7 +57,7 @@
     transition:opacity 1.1s ease, transform 3.5s ease;
   }
   .bd-layer.in{opacity:1; transform:scale(1);}
-  .bd-layer svg{width:100%; height:100%; display:block;}
+  .bd-layer img{width:100%; height:100%; display:block; object-fit:cover;}
   #particles{position:absolute; inset:0; pointer-events:none;}
   #backdrop::after{
     content:'';
@@ -450,144 +450,22 @@
 
 <script>
 /* ---------- BACKDROPS ----------
-   Hand-built SVG "paintings" in a Hopper-noir palette, not literal photos —
-   evoked locations rather than illustrated portraits, kept lightweight (no image assets to load). */
+   Painted isometric location art (Higgsfield / nano_banana_pro), swapped in
+   for the earlier SVG placeholders. Preloaded as <img> and crossfaded. */
 const BACKDROPS = {
-  park:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0d1017"/>
-    <rect y="0" width="400" height="180" fill="#141a24"/>
-    <circle cx="90" cy="50" r="26" fill="#f4e6b8" opacity="0.9"/>
-    <circle cx="90" cy="50" r="45" fill="#f4e6b8" opacity="0.08"/>
-    <rect x="0" y="175" width="400" height="125" fill="#0a0e10"/>
-    <path d="M0 190 Q100 175 200 188 T400 182 V300 H0 Z" fill="#10151a"/>
-    <rect x="130" y="205" width="140" height="8" fill="#1c2530"/>
-    <rect x="150" y="195" width="6" height="12" fill="#1c2530"/>
-    <rect x="250" y="195" width="6" height="12" fill="#1c2530"/>
-    <rect x="30" y="60" width="4" height="140" fill="#2a2015"/>
-    <ellipse cx="32" cy="55" rx="30" ry="10" fill="#3a3a20" opacity="0.5"/>
-    <rect x="320" y="70" width="4" height="130" fill="#2a2015"/>
-    <ellipse cx="322" cy="65" rx="26" ry="9" fill="#3a3a20" opacity="0.4"/>
-  </svg>`,
-
-  alley:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0a0a0c"/>
-    <rect x="0" y="0" width="400" height="230" fill="#161511"/>
-    <rect x="120" y="60" width="160" height="170" fill="#0e0d0b"/>
-    <rect x="140" y="90" width="30" height="45" fill="#241f14" opacity="0.7"/>
-    <rect x="230" y="90" width="30" height="45" fill="#3a2c14" opacity="0.85"/>
-    <rect x="185" y="150" width="30" height="70" fill="#050403"/>
-    <circle cx="150" cy="70" r="3" fill="#e0995a"/>
-    <rect x="148" y="72" width="4" height="14" fill="#3a2c1a"/>
-    <rect x="0" y="228" width="400" height="72" fill="#050505"/>
-    <rect x="60" y="235" width="18" height="18" fill="#1a1a1a"/>
-  </svg>`,
-
-  'bakery-int':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#120d08"/>
-    <rect x="0" y="0" width="400" height="200" fill="#1c140c"/>
-    <rect x="20" y="140" width="360" height="14" fill="#2a1c10"/>
-    <circle cx="90" cy="90" r="20" fill="#e0995a" opacity="0.55"/>
-    <circle cx="90" cy="90" r="40" fill="#e0995a" opacity="0.12"/>
-    <rect x="250" y="60" width="90" height="70" fill="#0d0906"/>
-    <rect x="260" y="70" width="70" height="50" fill="#3a2410" opacity="0.6"/>
-    <rect x="0" y="198" width="400" height="102" fill="#0a0705"/>
-    <rect x="150" y="205" width="100" height="10" fill="#241a10"/>
-    <circle cx="200" cy="200" r="6" fill="#e0995a" opacity="0.8"/>
-  </svg>`,
-
-  'street-diner-ext':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0a0d12"/>
-    <rect x="0" y="0" width="400" height="210" fill="#12161d"/>
-    <rect x="60" y="90" width="150" height="110" fill="#181008"/>
-    <rect x="75" y="100" width="120" height="55" fill="#c9573f" opacity="0.35"/>
-    <rect x="75" y="100" width="120" height="55" fill="#e0995a" opacity="0.12"/>
-    <rect x="0" y="205" width="400" height="95" fill="#06070a"/>
-    <circle cx="330" cy="70" r="3" fill="#e0995a" opacity="0.6"/>
-  </svg>`,
-
-  diner:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#100c0a"/>
-    <rect x="0" y="0" width="400" height="180" fill="#1a1210"/>
-    <rect x="0" y="175" width="400" height="10" fill="#3a1f18"/>
-    <rect x="40" y="120" width="90" height="55" fill="#7a2418" opacity="0.5"/>
-    <rect x="270" y="120" width="90" height="55" fill="#7a2418" opacity="0.4"/>
-    <rect x="0" y="185" width="400" height="115" fill="#0a0605"/>
-    <circle cx="200" cy="60" r="4" fill="#e0995a" opacity="0.7"/>
-  </svg>`,
-
-  apartment:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0a0b10"/>
-    <rect x="60" y="10" width="280" height="230" fill="#161a22"/>
-    <rect x="90" y="40" width="40" height="50" fill="#e0995a" opacity="0.5"/>
-    <rect x="150" y="40" width="40" height="50" fill="#0a0a0c"/>
-    <rect x="210" y="40" width="40" height="50" fill="#3a3020" opacity="0.6"/>
-    <rect x="270" y="40" width="40" height="50" fill="#0a0a0c"/>
-    <rect x="90" y="110" width="40" height="50" fill="#0a0a0c"/>
-    <rect x="150" y="110" width="40" height="50" fill="#e0995a" opacity="0.35"/>
-    <rect x="210" y="110" width="40" height="50" fill="#0a0a0c"/>
-    <rect x="270" y="110" width="40" height="50" fill="#0a0a0c"/>
-    <rect x="0" y="238" width="400" height="62" fill="#050505"/>
-  </svg>`,
-
-  'street-night':`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#07080c"/>
-    <rect x="0" y="0" width="400" height="215" fill="#0e1118"/>
-    <rect x="0" y="210" width="400" height="90" fill="#050608"/>
-    <circle cx="200" cy="80" r="4" fill="#e0995a" opacity="0.9"/>
-    <rect x="198" y="84" width="4" height="120" fill="#241f1a" opacity="0.6"/>
-    <ellipse cx="200" cy="215" rx="60" ry="10" fill="#e0995a" opacity="0.15"/>
-    <rect x="330" y="140" width="26" height="70" fill="#12141a" opacity="0.7"/>
-  </svg>`,
-
-  office:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0c0d0e"/>
-    <rect x="0" y="0" width="400" height="220" fill="#161613"/>
-    <rect x="0" y="60" width="400" height="6" fill="#e0995a" opacity="0.18"/>
-    <rect x="140" y="90" width="120" height="80" fill="#0a0a08"/>
-    <rect x="150" y="100" width="100" height="60" fill="#2a2a1f" opacity="0.4"/>
-    <rect x="0" y="215" width="400" height="85" fill="#070706"/>
-  </svg>`,
-
-  liminal:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#0a0810"/>
-    <rect x="0" y="0" width="400" height="300" fill="#120e1c" opacity="0.6"/>
-    <circle cx="200" cy="140" r="90" fill="#5f3a6d" opacity="0.18"/>
-    <circle cx="200" cy="140" r="50" fill="#c9573f" opacity="0.12"/>
-  </svg>`,
-
-  confrontation:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#08090b"/>
-    <rect x="0" y="0" width="400" height="240" fill="#111214"/>
-    <rect x="170" y="70" width="60" height="130" fill="#050505"/>
-    <ellipse cx="200" cy="65" rx="34" ry="34" fill="#050505"/>
-    <rect x="0" y="235" width="400" height="65" fill="#040404"/>
-    <rect x="0" y="90" width="400" height="4" fill="#e0995a" opacity="0.12"/>
-  </svg>`,
-
-  dawn:`<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
-    <rect width="400" height="300" fill="#1a1a22"/>
-    <rect x="0" y="0" width="400" height="200" fill="#2a2438"/>
-    <rect x="0" y="150" width="400" height="50" fill="#7a5548" opacity="0.5"/>
-    <rect x="0" y="195" width="400" height="105" fill="#0e0d10"/>
-    <circle cx="80" cy="60" r="18" fill="#e8a869" opacity="0.5"/>
-  </svg>`
+  park: 'art/park.jpg',
+  alley: 'art/alley.jpg',
+  'bakery-int': 'art/bakery-int.jpg',
+  'street-diner-ext': 'art/street-diner-ext.jpg',
+  diner: 'art/diner.jpg',
+  apartment: 'art/apartment.jpg',
+  'street-night': 'art/street-night.jpg',
+  office: 'art/office.jpg',
+  liminal: 'art/liminal.jpg',
+  confrontation: 'art/confrontation.jpg',
+  dawn: 'art/dawn.jpg'
 };
 
-function sceneKey(id){
-  if(/^(start|dirNorth|dirSouth|dirEast|dirWest|loopBack|arriveBakeryAgain)$/.test(id)) return 'park';
-  if(/^(approachDoor|matchbook|checkPockets|pocket|tryRemember|readReceipt|tryDoor|keypad|backAlley|backDoor|fireEscape|windowPeer|backDeadEnd|baker)/.test(id)) return 'alley';
-  if(id==='chapterEndReal' || /^(c2_|c14_|b1_|b2_|b3_)/.test(id)) return 'bakery-int';
-  if(/^c3_/.test(id)) return 'street-diner-ext';
-  if(/^(c4_|c8_a3|c9_a3|c12_a3|c13_a3)/.test(id)) return 'diner';
-  if(/^(c5_|c6_|a1_stub|a2_stub|a3_stub|c10_|c11_)/.test(id)) return 'street-night';
-  if(/^(c7_|c18_|c22_)/.test(id)) return 'liminal';
-  if(/^(c8_a1|c9_(?!a2|a3)|c12_a1|c13_a1)/.test(id)) return 'apartment';
-  if(/^(c8_a2|c9_a2|c12_a2|c19_evidence)/.test(id)) return 'office';
-  if(/^(c19_visions|c19_noOne)/.test(id)) return 'liminal';
-  if(/^c23_/.test(id)) return 'confrontation';
-  if(/^(cs_|hn_|vn_|nw_)/.test(id)) return 'dawn';
-  return 'street-night';
-}
 let __lastKey = null;
 function renderBackdrop(id){
   const key = sceneKey(id);
@@ -596,7 +474,11 @@ function renderBackdrop(id){
   const el = document.getElementById('backdrop');
   const layer = document.createElement('div');
   layer.className = 'bd-layer';
-  layer.innerHTML = BACKDROPS[key] || BACKDROPS['street-night'];
+  const img = document.createElement('img');
+  img.src = BACKDROPS[key] || BACKDROPS['street-night'];
+  img.alt = '';
+  img.loading = 'eager';
+  layer.appendChild(img);
   el.appendChild(layer);
   requestAnimationFrame(()=> layer.classList.add('in'));
   // keep at most 2 layers so old ones fade out beneath, then prune

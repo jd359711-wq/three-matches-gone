@@ -1,5 +1,8 @@
-const CACHE = 'tmg-v1';
-const FILES = ['./', './index.html', './manifest.json', './icon.png'];
+const CACHE = 'tmg-v2';
+const FILES = ['./', './index.html', './manifest.json', './icon.png',
+  './art/park.jpg', './art/alley.jpg', './art/bakery-int.jpg', './art/street-diner-ext.jpg',
+  './art/diner.jpg', './art/apartment.jpg', './art/street-night.jpg', './art/office.jpg',
+  './art/liminal.jpg', './art/confrontation.jpg', './art/dawn.jpg'];
 
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
