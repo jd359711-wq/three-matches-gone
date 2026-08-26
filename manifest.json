@@ -1,0 +1,13 @@
+{
+  "name": "Three Matches Gone",
+  "short_name": "3 Matches",
+  "description": "A psychological noir interactive fiction — memory, evidence, and the truth you choose to believe.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0a08",
+  "theme_color": "#0b0a08",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
